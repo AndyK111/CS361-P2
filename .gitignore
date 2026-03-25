@@ -1,1 +1,14 @@
-.DS_STORE
+.DS_Store
+Thumbs.db
+
+.idea/
+*.iml
+*.iws
+*.ipr
+
+.project
+.classpath
+.settings/
+.metadata/
+
+.vscode/
