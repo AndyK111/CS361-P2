@@ -1,22 +1,44 @@
 package fa.nfa;
 import fa.State;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+/**
+ * Represents a distinct state in an NFA. Each NFAState has a name and a set of transitions to other NFAStates, 
+ * stored as a HashMap where the keys are the symbols consumed in the transition and the values are sets of NFAStates
+ * reachable by comsuming the corresponding symbol (or epsilon if an epsilon transition). This class includes
+ * methods for adding, clearing, and retrieving transitions, as well as checking if a transition exists or is an 
+ * epsilon transition.
+ * @author Sam Kleman, Andy Kempf
+ */
 public class NFAState<S> extends State {
-    private final Map<S, NFAState<S>> transitionMap;
+    // Transition map responsible for storing the state's transitions
+    private final Map<S, Set<NFAState<S>>> transitionMap;
 
+    /**
+     * Constructor for NFAState, initializes instance variables and sets the name of the state
+     * @param name - the name of the state
+     */
     public NFAState(String name) {
         super(name);
         transitionMap = new HashMap<>();
     }
 
-    public void addTransition(S key, NFAState<S> destination) throws UnsupportedOperationException {
-        if (transitionMap.containsKey(key)) throw new UnsupportedOperationException("Attempted to override existing delta");
-        transitionMap.put(key, destination);
+    /**
+     * Adds a transition to the NFAState's transition map, creating a new entry if the key does not already exist
+     * @param key - the symbol consumed in the transition
+     * @param destination - the NFAState reachable by consuming the symbol
+     */
+    public void addTransition(S key, NFAState<S> destination) {
+        transitionMap
+            .computeIfAbsent(key, k -> new HashSet<>())
+            .add(destination);
     }
 
+    /**
+     * Clears the transition associated with the given key from the NFAState's transition map
+     * @param key - the symbol for which to clear the transition
+     * @throws NoSuchElementException - if the transition does not exist
+     */
     public void clearTransition(S key) throws NoSuchElementException {
         if (!transitionMap.containsKey(key)) throw new NoSuchElementException("Attempted to clear non-existent delta");
         transitionMap.remove(key);
@@ -24,26 +46,50 @@ public class NFAState<S> extends State {
 
      /**
      * Returns the NFAState object that results from a transition
-     * @param key                       The character consumed in a transition
-     * @return                          The NFAState that results when traversing a particular transition
-     * @throws NoSuchElementException   Thrown when there is an attempt to get the destination of a key/destination pair that does not exist
+     * @param key - The character consumed in a transition
+     * @return - The NFAState that results when traversing a particular transition
+     * @throws NoSuchElementException - If the transition does not exist
      */
-    public NFAState<S> getTransition(S key) throws NoSuchElementException{
+    public Set<NFAState<S>> getTransitions(S key) throws NoSuchElementException {
         if (!transitionMap.containsKey(key)) throw new NoSuchElementException("Attempted to get non-existent delta");
-
         return transitionMap.get(key);
     }
 
+    /**
+     * Checks if a transition exists for the given key in the transition map
+     * @param key - The symbol for which to check the transition
+     * @return - True if the transition exists, false otherwise
+     */
     public boolean hasTransition(S key) {
         return transitionMap.containsKey(key);
     }
 
+    /**
+     * Clears all transitions from the NFAState's transition map
+     */
     public void clearAllTransitions() {
         transitionMap.clear();
     }
 
+    /**
+     * Checks if the given key corresponds to an epsilon transition (represented by "e")
+     * @param key - The symbol to check
+     * @return - True if the key represents an epsilon transition, false otherwise
+     */
     public boolean isEpsilonTransition(S key) {
         return key.equals("e");
+    }
+
+    /**
+     * Returns a set of all NFAStates reachable from this state through any transition (including epsilon transitions)
+     * @return - A set of all reachable NFAStates
+     */
+    public HashSet<NFAState<S>> getAllTransitions() {
+        HashSet<NFAState<S>> result = new HashSet<>();
+        for (Set<NFAState<S>> states : transitionMap.values()) {
+            result.addAll(states);
+        }
+        return result;
     }
 
 }
