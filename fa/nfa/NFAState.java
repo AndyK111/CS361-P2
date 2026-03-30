@@ -52,7 +52,7 @@ public class NFAState extends State {
      * @throws NoSuchElementException - If the transition does not exist
      */
     public Set<NFAState> toStates(Character key) throws NoSuchElementException {
-        return transitionMap.get(key) != null ? transitionMap.get(key) : new HashSet<>();
+        return transitionMap.get(key) != null ? new HashSet<>(transitionMap.get(key)) : new HashSet<>();
     }
 
     /**

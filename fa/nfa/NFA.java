@@ -1,9 +1,8 @@
 package fa.nfa;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static java.lang.Math.max;
 
 public class NFA implements NFAInterface
 {
@@ -96,18 +95,61 @@ public class NFA implements NFAInterface
 
     // endregion
 
+    // region methods
+
+    /**
+     * Builds a map where the key is the quantity of input characters consumed,
+     * and the value is a set containing all possible states.
+     * @param input A string used for input on this NFA
+     * @return HashMap where key is the number of consumed characters and value is all possible current states
+     */
+    public Map<Integer, Set<NFAState>> getTraceMap(String input)
+    {
+        Map<Integer, Set<NFAState>> traceMap = new HashMap<>();
+        traceMap.put(0, new HashSet<>());
+        traceMap.get(0).addAll(eClosure(initialState));
+
+        for (int i = 0; i < input.length(); i++)
+        {
+            Set<NFAState> senders = traceMap.get(i);
+            Set<NFAState> receivers = new HashSet<>();
+
+            for (NFAState sender : senders)
+            {
+                receivers.addAll(getToState(sender, input.charAt(i)));
+            }
+
+            traceMap.put(i+1, receivers);
+        }
+
+        return traceMap;
+    }
+
     @Override
     public boolean accepts(String s)
     {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'accepts'");
+        Map<Integer, Set<NFAState>> traceMap = getTraceMap(s);
+
+        //tracemap.get(s.length()) is "map that contains all possible states after consuming all input"
+        for (NFAState endState : traceMap.get(s.length())) if (finalStates.contains(endState)) return true;
+
+        return false;
     }
 
     @Override
     public Set<NFAState> getToState(NFAState from, char onSymb)
     {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getToState'");
+        Set<NFAState> reachable = new HashSet<>();
+
+        for (NFAState senders : eClosure(from))
+        {
+            for (NFAState sender : senders.toStates(onSymb))
+            {
+                reachable.addAll(eClosure(sender));
+            }
+        }
+
+        return reachable;
     }
 
     /**
@@ -120,31 +162,54 @@ public class NFA implements NFAInterface
     @Override
     public HashSet<NFAState> eClosure(NFAState s)
     {
-        Set<NFAState> closure = s.toStates(EPSILON);
-        closure.remove(s); //Prevent infinite recursion from epsilon self-loops in tests
-        for (NFAState state : closure)
-        {
-            closure.addAll(eClosure(state));
-        }
+        //Same idea as a recursive traversal of the NFA, but manually tracked with a stack
+        Deque<NFAState> workStack  = new ArrayDeque<>();
+        HashSet<NFAState> closure = new HashSet<>();
+        workStack.push(s);
         closure.add(s);
 
-        return (HashSet<NFAState>) closure;
+        while (!workStack.isEmpty())
+        {
+            NFAState current = workStack.pop();
+
+            for (NFAState next : current.toStates(EPSILON))
+            {
+                if (!closure.contains(next))
+                {
+                    //This is the "recursive step"
+                    closure.add(next);
+                    workStack.push(next);
+                }
+            }
+        }
+
+        return closure;
     }
 
     @Override
     public int maxCopies(String s)
     {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'maxCopies'");
+        int maxConcurrent = 0;
+
+        //Finds the set of states with input to process that has the largest cardinality
+        for (Set<NFAState> states : getTraceMap(s).values()) maxConcurrent = max(maxConcurrent, states.size());
+
+        return maxConcurrent;
     }
 
     @Override
     public boolean isDFA()
     {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isDFA'");
-    }
+        //Trivially check DFA rules, for any state, no epsilon transitions & no redundant transitions
+        for (NFAState state : allStates.values())
+        {
+            if (state.hasTransition(EPSILON)) return false;
 
+            for (Character c : alphabet) if (state.toStates(c).size() > 1) return false;
+        }
+
+        return true;
+    }
     //endregion
 
 }
