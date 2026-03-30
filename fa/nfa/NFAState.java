@@ -10,9 +10,10 @@ import java.util.*;
  * epsilon transition.
  * @author Sam Kleman, Andy Kempf
  */
-public class NFAState<S> extends State {
+@SuppressWarnings("unused")
+public class NFAState extends State {
     // Transition map responsible for storing the state's transitions
-    private final Map<S, Set<NFAState<S>>> transitionMap;
+    private final Map<Character, Set<NFAState>> transitionMap;
 
     /**
      * Constructor for NFAState, initializes instance variables and sets the name of the state
@@ -28,7 +29,7 @@ public class NFAState<S> extends State {
      * @param key - the symbol consumed in the transition
      * @param destination - the NFAState reachable by consuming the symbol
      */
-    public void addTransition(S key, NFAState<S> destination) {
+    public void addTransition(Character key, NFAState destination) {
         transitionMap
             .computeIfAbsent(key, k -> new HashSet<>())
             .add(destination);
@@ -39,7 +40,7 @@ public class NFAState<S> extends State {
      * @param key - the symbol for which to clear the transition
      * @throws NoSuchElementException - if the transition does not exist
      */
-    public void clearTransition(S key) throws NoSuchElementException {
+    public void clearTransition(Character key) throws NoSuchElementException {
         if (!transitionMap.containsKey(key)) throw new NoSuchElementException("Attempted to clear non-existent delta");
         transitionMap.remove(key);
     }
@@ -50,7 +51,7 @@ public class NFAState<S> extends State {
      * @return - The NFAState that results when traversing a particular transition
      * @throws NoSuchElementException - If the transition does not exist
      */
-    public Set<NFAState<S>> getTransitions(S key) throws NoSuchElementException {
+    public Set<NFAState> getTransitions(Character key) throws NoSuchElementException {
         if (!transitionMap.containsKey(key)) throw new NoSuchElementException("Attempted to get non-existent delta");
         return transitionMap.get(key);
     }
@@ -60,7 +61,7 @@ public class NFAState<S> extends State {
      * @param key - The symbol for which to check the transition
      * @return - True if the transition exists, false otherwise
      */
-    public boolean hasTransition(S key) {
+    public boolean hasTransition(Character key) {
         return transitionMap.containsKey(key);
     }
 
@@ -76,17 +77,17 @@ public class NFAState<S> extends State {
      * @param key - The symbol to check
      * @return - True if the key represents an epsilon transition, false otherwise
      */
-    public boolean isEpsilonTransition(S key) {
-        return key.equals("e");
+    public boolean isEpsilonTransition(Character key) {
+        return key.equals('e');
     }
 
     /**
      * Returns a set of all NFAStates reachable from this state through any transition (including epsilon transitions)
      * @return - A set of all reachable NFAStates
      */
-    public HashSet<NFAState<S>> getAllTransitions() {
-        HashSet<NFAState<S>> result = new HashSet<>();
-        for (Set<NFAState<S>> states : transitionMap.values()) {
+    public HashSet<NFAState> getAllTransitions() {
+        HashSet<NFAState> result = new HashSet<>();
+        for (Set<NFAState> states : transitionMap.values()) {
             result.addAll(states);
         }
         return result;
