@@ -51,9 +51,8 @@ public class NFAState extends State {
      * @return - The NFAState that results when traversing a particular transition
      * @throws NoSuchElementException - If the transition does not exist
      */
-    public Set<NFAState> getTransitions(Character key) throws NoSuchElementException {
-        if (!transitionMap.containsKey(key)) throw new NoSuchElementException("Attempted to get non-existent delta");
-        return transitionMap.get(key);
+    public Set<NFAState> toStates(Character key) throws NoSuchElementException {
+        return transitionMap.get(key) != null ? transitionMap.get(key) : new HashSet<>();
     }
 
     /**
@@ -85,8 +84,8 @@ public class NFAState extends State {
      * Returns a set of all NFAStates reachable from this state through any transition (including epsilon transitions)
      * @return - A set of all reachable NFAStates
      */
-    public HashSet<NFAState> getAllTransitions() {
-        HashSet<NFAState> result = new HashSet<>();
+    public Set<NFAState> getAllTransitions() {
+        Set<NFAState> result = new HashSet<>();
         for (Set<NFAState> states : transitionMap.values()) {
             result.addAll(states);
         }
