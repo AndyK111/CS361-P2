@@ -6,93 +6,92 @@
 **************** 
 
 
-OVERVIEW:
-The program simulates the functionality of an NFA. Some of its built in features
-include a method for testing if an NFA is a DFA, giving the eclosure, and by using
-a tracemap you can partially trace which states it traverses when given some input.
+# OVERVIEW
+The program includes a library used to simulate an NFA. This library builds upon the capability
+of a DFA by allowing epsilon transitions to exist, and states now map to sets of stats on a transition, allowing
+transitions from one input to multiple states.
 
-INCLUDED FILES:
+# INCLUDED FILES
 
-- NFAState.java : small class to manage the inner state of a "state" 
-- NFA.java : the main driver class for broader NFA functionality.
+These are the files included (in addition to project files like interface/abstract classes, etc...)
+- `NFA.java` : Class responsible for managing groups of states and traversions.
+- `NFAState.java` : Class responsible for managing data designated to a state, primarily transitions.
+- `NFATest.java` : JUnit tests for NFA.java integrity
+
+# COMPILING AND RUNNING
+
+This project does not have a `main` method or command-line interface. The
+implementation is meant to be compiled as a library and exercised through the
+JUnit test suite in `test/nfa/NFATest.java`.
+
+# PROGRAM DESIGN AND IMPORTANT CONCEPTS
+
+The program is divided up into a few sections, the constructor and fields
+are self-explanatory. The trivial methods all relate to trivial data manipulation
+and retrieval. The EPSILON constant refers to the letter `e` as per the assignment 
+guidelines.
+
+The core of the functionality in NFA.java rest in the eClosure, getToState, and getTraceMap method. 
+The rest of the methods in the non-trivial region are typically taking data from one of these three
+and performing some relatively simple operation upon it to yield the result.
+
+eClosure is the lowest level of functionality here, the other two are built ontop of the work that 
+eClosure does. eClosure uses an internal stack to keep track of what needs to be done next. It also has a HashSet
+instance to keep track of the result of the work. It begins by pushing the provided state onto the stack,
+then goes into a loop that processes until the stack is empty. Inside that loop we simply iterate through
+all connections looking for any defined on e. And if that destination isnt in the set, we push it to the set and the 
+workStack.
+
+The next rung of the ladder is getToState. getToState takes a NFAState and a character, and systematically traverses the 
+eclosure, and adds the reacable states through each node found in the eclosure. The eclosure of those
+reachable states are added to the set of reachable states which are returned.
+
+The next most complex function is the getTraceMap function. This one is not defined in the interface but proved to be
+what I thought was the most elegant way to get the info needed for the other methods. This method works by generating a
+HashMap that points an integer representing the number of character consumed to the different "NFA" instances after that
+consumption (represented by states & the index number we are mapping from). It works by traversing of the input string
+by indexxing, and simply assign the getToState result of consuming input from all previous states at the previous index
+in the HashTable. The resulting table has a few interesting properties, the max cardinality of all the sets in its values
+is equal to the max number of clones. The set pointed to by the length of the string contains all states reachable after
+consuming all input, so checking for acceptance only entails iterating over this set and checking if any state is final.
+
+isDFA is not involved in this chain of functionality. But its functionality is incredibly simple, NFAs have two 
+properties that break the rules of the DFA, they have epsilon transitions, and they allow a character to transition to 
+more than a single state. So isDFA just iterated over the set of all states, and returns false whenever it encounters
+either a state with an epsilon transition, or a state with a transition that results in a set with greater than a single
+element. 
+
+# TESTING
+
+Testing was done using the included test methods. There were some bugs, one such bug was
+that I simply wasn't quite sure how to calculate the maxCopies. I tried experimenting with using
+a record that would run on a findFinalStates helper that would iterate over everything and return the last
+states. But tracking the maxCopies while using a more typical stack implementation proved to be very annoying, which is
+why I rewrote to use the HashMap implementation it currently has. This involved lots of stepping in the debugger
+before I gave up and rewrote, after rewriting it things fell into place nearly instantly.
+
+# DISCUSSION
+
+More or less an extension of the testing. I realized that I could just use a HashMap that correlated the remaining
+input to what was reachable after consuming the character. At first it started as a String->Set<NFAState> map, but I
+shortly realized that I could just replace the string with the amount of characters consumed, and then I also avoid 
+having to take a subString everytime I generate a new layer. I chose this approach because it made
+implementing the other methods trivial, all the data needed for acceptance and maxStates was there.
+
+Working with stacks instead of recursion also proved difficult, but after coming to the realization that when you recurse
+you're basically doing the same thing as pushing the parameters to the callstack and looping, it become fairly intuitive 
+to reason about.
+
+# EXTRA CREDIT
+
+none
 
 
-COMPILING AND RUNNING:
+# SOURCES
 
-this java class has no front facing user interface, to use it you can
-read the source code and jacadocs. To compile this java class you can simply
-use javac and target NFA.java. 
-
- Run the compiled class file with the command:
- 
-(JUnit output here?) 
-
-
-PROGRAM DESIGN AND IMPORTANT CONCEPTS:
-
-
- This is the sort of information someone who really wants to
- understand your program - possibly to make future enhancements -
- would want to know.
-
-
- Explain the main concepts and organization of your program so that
- the reader can understand how your program works. This is not a repeat
- of javadoc comments or an exhaustive listing of all methods, but an
- explanation of the critical algorithms and object interactions that make
- up the program.
-
-
- Explain the main responsibilities of the classes and interfaces that make
- up the program. Explain how the classes work together to achieve the program
- goals. If there are critical algorithms that a user should understand, 
- explain them as well.
- 
- If you were responsible for designing the program's classes and choosing
- how they work together, why did you design the program this way? What, if 
- anything, could be improved? 
-
-
-TESTING:
-
-
- How did you test your program to be sure it works and meets all of the
- requirements? What was the testing strategy? What kinds of tests were run?
- Can your program handle bad input? Is your program  idiot-proof? How do you 
- know? What are the known issues / bugs remaining in your program?
-
-
-
-
-DISCUSSION:
- 
- Discuss the issues you encountered during programming (development)
- and testing. What problems did you have? What did you have to research
- and learn on your own? What kinds of errors did you get? How did you 
- fix them?
- 
- What parts of the project did you find challenging? Is there anything
- that finally "clicked" for you in the process of working on this project?
- 
- 
-EXTRA CREDIT:
-
-
- If the project had opportunities for extra credit that you attempted,
- be sure to call it out so the grader does not overlook it.
-
-
-SOURCES:
- All sources used outside of lecture notes, slides, and the textbook need to 
- be cited here. If you used websites, used GenAI, asked your dad or your boss 
- or your roommate for help then you must cite those resources. I am not 
- concerned if you use proper APA or MLA or another format as long as you include 
- all relevant information. If it is a person or GenAI that you referenced, be 
- sure to include who you talked to (or which AI you accessed), when you talked 
- to them, and what help they provided (e.g. Student, Awesome. Private 
- communication, 21 January 2026. Discussed how polymorphism allows the return 
- types of methods implemented in a class to be different from the class specified 
- in the interface as long as the <type in implementation> “is-a” <type in interface>.)
+I feel that the autocomplete on IntelliJ has gotten so good I should list it here. I dont know 
+if it uses some sort of local AI or something, but it seemed to always know relatively what I was
+about to type before I could finish thinking about it.
 
 ----------------------------------------------------------------------------
 
